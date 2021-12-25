@@ -6,7 +6,7 @@
 #
 
 import sys
-from ec2.ec2_cli import main
+from ec2.main import main
 
 if __name__ == "__main__":
     sys.exit(main())
