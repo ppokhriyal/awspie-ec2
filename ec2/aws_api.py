@@ -19,6 +19,7 @@ class AwsBotoApi:
             list_ec2_list = []
             list1 = response['Reservations']
             for i in list1:
+            
                 #add instance-id
                 list_ec2_dict['Instance-Id'] = i['Instances'][0]['InstanceId']
                 
@@ -29,13 +30,13 @@ class AwsBotoApi:
                     list_ec2_dict['Tag'] = '(Unknown)'
                 
                 #check for private ip address
-                if len(i['Instances'][0]['PrivateIpAddress']) == 0:
+                if 'PrivateIpAddress' not in i['Instances'][0]:
                     list_ec2_dict['Private-IP'] = '(Unknown)'
                 else:
                     list_ec2_dict['Private-IP'] = i['Instances'][0]['PrivateIpAddress']
                 
                 #check for public ip address
-                if len(i['Instances'][0]['PublicIpAddress']) == 0:
+                if 'PublicIpAddress' not in i['Instances'][0]:
                     list_ec2_dict['Public-IP'] = '(Unknown)'
                 else:
                     list_ec2_dict['Public-IP'] = i['Instances'][0]['PublicIpAddress']
@@ -49,7 +50,28 @@ class AwsBotoApi:
             return list_ec2_list
 
     # stop ec2 instance
-    def stop_instance(self,instanceid :str):
-        client = boto3.client('ec2')
-        response = client.stop_instances(InstanceIds=[instanceid])
-        return response
+    def stop_instance(self,instanceid :str, region :str):
+        client = boto3.client('ec2',region_name=region)
+        try:
+            response = client.stop_instances(InstanceIds=[instanceid])
+            return {'result': 'success','msg':response}
+        except botocore.exceptions.ClientError as error:
+            return {'result': 'fail','msg': error}
+
+    # stop ec2 instance
+    def start_instance(self,instanceid :str, region :str):
+        client = boto3.client('ec2',region_name=region)
+        try:
+            response = client.start_instances(InstanceIds=[instanceid])
+            return {'result': 'success','msg':response}
+        except botocore.exceptions.ClientError as error:
+            return {'result': 'fail','msg': error}
+    
+    # terminate ec2 instance
+    def terminate_instance(self,instanceid :str,region :str):
+        client =  boto3.client('ec2',region_name=region)
+        try:
+            response = client.terminate_instances(InstanceIds=[instanceid])
+            return {'result': 'success','msg':response}
+        except botocore.exceptions.ClientError as error:
+            return {'result': 'fail','msg':error}

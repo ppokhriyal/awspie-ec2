@@ -2,6 +2,8 @@
 
 import os
 import sys
+
+import botocore
 from ec2.aws_api import AwsBotoApi
 from ec2.aws_tabula import CreateTable
 
@@ -19,9 +21,9 @@ def validate_parent_args(argslist :list)-> bool:
     #dict: parent -> child arguments length
     parent_args_dict = {
         'list':[3],
-        'stop':[2],
-        'start':[2],
-        'terminate':[2],
+        'stop':[4],
+        'start':[4],
+        'terminate':[4],
         '-help':[1]
     }
 
@@ -32,8 +34,11 @@ def validate_parent_args(argslist :list)-> bool:
                     return False
                 else:
                     return True
-            else:
-                return True
+            elif argslist[0] in ['stop','start','terminate']:
+                if argslist[2] != '-region':
+                    return False
+                else:
+                    return True
         else:
             return False
     else:
@@ -67,8 +72,33 @@ def main():
 
         # check for stop parent args
         if args[0] == 'stop':
-            result = boto_api_obj.stop_instance(args[1])
-            print(result)
+            result = boto_api_obj.stop_instance(args[1],args[3])
+            if result['result'] == 'fail':
+                print(error_msg(result['msg']))
+                quit(1)
+            else:
+                print(messages('Status changed to stopping'))
+                quit(0)
+
+        # check for start parent args
+        if args[0] == 'start':
+            result = boto_api_obj.start_instance(args[1],args[3])
+            if result['result'] == 'fail':
+                print(error_msg(result['msg']))
+                quit(1)
+            else:
+                print(messages('Status changed to starting'))
+                quit(0)
+
+        # check for terminate parent args
+        if args[0] == 'terminate':
+            result = boto_api_obj.terminate_instance(args[1],args[3])
+            if result['result'] == 'fail':
+                print(error_msg(result['msg']))
+                quit(1)
+            else:
+                print(messages('Status changed to '+result['msg']['TerminatingInstances'][0]['CurrentState']['Name']))
+                quit(0)
     else:
         print(error_msg("Invalid arguments.Try awspie-ec2 -help"))
         quit(1)
